@@ -1,0 +1,128 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>YuanFront.tool.js</title>
+    <link rel="apple-touch-icon-precomposed" href="http://www.yuanoook.com/cdn/ico/yuanicon_152.png">
+    <link rel="shortcut icon" href="http://www.yuanoook.com/cdn/ico/yuanicon_32.png">
+
+    <style>
+        [oh]{overflow:hidden;}
+        [no]{margin:0;padding:0;border:0;}
+        .bb{box-sizing:border-box;}
+        .fill-screen{position:fixed;top:0;right:0;bottom:0;left:0;}
+        .posa{position:absolute;}
+    </style>
+</head>
+<body oh no>
+    <div class="fill-screen" yuan-layout>
+        <div class="posa" data-drag>
+            <div class="posa"></div>
+        </div>
+    </div>
+<script src="http://yuanoook.com/cdn/bootstrap/jquery.min.js"></script>
+<script src="http://yuanoook.com/cdn/drag.live.js"></script>
+<script>
+!function($){
+    $.prototype.extend({
+        clip:function(top,right,bottom,left){
+            return $(this).css('clip','rect('+top+'px,'+right+'px,'+bottom+'px,'+left+'px)');
+        }
+    });
+}(jQuery);
+
+$(function(){
+        //importLayout( "http://yuanoook.com/frontlab/emiework/shotscreen.png" );
+        importLayout( "http://d.hiphotos.baidu.com/image/h%3D360/sign=97313e91c8ef7609230b9f991edca301/6d81800a19d8bc3e2af03cc6818ba61ea9d345c5.jpg" );
+});
+
+function importLayout( src ){
+    var img = new Image();
+    img.src = src;
+    if (img.complete) {
+		setLayout( img );
+	} else {
+		img.onload = function () {
+			setLayout( img );
+			img.onload = null;
+		};
+	};
+};
+
+function setLayout( layout ){
+    var target = $('[yuan-layout]').children().first();
+    var goal = target.children().first();
+
+    target.add(goal).css({
+        width: layout.width + 'px',
+        height: layout.height + 'px'
+    }).clip(0,layout.width,layout.height,0);
+
+    target.css('background', '-webkit-linear-gradient(top, rgba(0,0,0,.7),rgba(0,0,0,.7)),' + 'url(' + layout.src + ')');
+
+    goal.css('background-image', 'url(' + layout.src + ')').dblclick(function(){
+        target.clip(0,layout.width,layout.height,0);
+
+        $('<div>').addClass('fill-screen').css({
+            opacity: .00001,
+            cursor: 'crosshair',
+            zIndex: 10000000
+        }).on('mousedown',function(event){
+            $(this).css('cursor', 'crosshair');
+
+            this._x = event.clientX;
+		    this._y = event.clientY;
+            
+            var helper = $('<div>').addClass('posa bb').css({
+                top: this._y,
+                left: this._x,
+                width: 0,
+                height: 0,
+                border: '1px dotted #fff'
+            }).insertAfter(this);
+
+            $(this).on('mousemove', function(event){
+                helper.css({
+                    top: Math.min(event.clientY, this._y),
+                    left: Math.min(event.clientX, this._x),
+                    width: Math.abs(event.clientX - this._x),
+                    height: Math.abs(event.clientY - this._y)
+                });
+            }).on('mouseup', function(){
+
+                var t = target.position();
+                t.width = target.width(), t.height = target.height();
+                var h = helper.position();
+                h.width = helper.width(), h.height = helper.height();
+
+                var top = h.top - t.top;
+                var left = h.left - t.left;
+                var bottom = top + h.height;
+                var right = left + h.width;
+
+                top = Math.max(top, 0);
+                left = Math.max(left, 0);
+                bottom = Math.min(bottom, t.height);
+                right = Math.min(right, t.width);
+
+                if(right - left < 20 || bottom-top < 20) return helper.remove();
+                /*
+                goal.click(function(){
+                    target.clip(top, right, bottom, left);
+                    $(this).css('cursor','move');
+                }).clip(top, right, bottom, left).css('cursor','pointer');
+                */
+
+                goal.add(target).clip(top, right, bottom, left);
+
+                helper.remove();
+                $(this).remove();
+            });
+        }).insertAfter(target);
+
+        return false;
+    });
+}
+</script>
+</body>
+</html>
